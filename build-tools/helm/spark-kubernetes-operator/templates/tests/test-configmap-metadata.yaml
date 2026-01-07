@@ -64,6 +64,7 @@ spec:
           {{- end }}
 
           echo "All ConfigMap metadata tests passed!"
+  serviceAccountName: {{ .Values.operatorRbac.serviceAccount.name }}
   restartPolicy: Never
 {{- end }}
 {{- end }}
