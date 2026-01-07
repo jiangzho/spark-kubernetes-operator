@@ -219,6 +219,7 @@ jobs:
           build-tools/helm/spark-kubernetes-operator/
           minikube docker-env --unset
           helm test spark
+          kubectl logs spark-test-${{ matrix.test-group }}
   lint:
     name: "Linter and documentation"
     runs-on: ubuntu-latest

@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+{{- if .Values.operatorConfiguration.configMap }}
 {{- if or (.Values.operatorConfiguration.configMap.labels) (.Values.operatorConfiguration.configMap.annotations) }}
 apiVersion: v1
 kind: Pod
@@ -22,7 +23,7 @@ metadata:
     {{- include "spark-operator.commonLabels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": test
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   containers:
     - name: kubectl
@@ -64,4 +65,5 @@ spec:
 
           echo "All ConfigMap metadata tests passed!"
   restartPolicy: Never
+{{- end }}
 {{- end }}
