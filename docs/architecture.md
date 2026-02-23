@@ -48,7 +48,67 @@ launching Spark deployments and submitting jobs under the hood. It also uses
 
 ## Application State Transition
 
-[![Application State Transition](resources/application_state_machine.png)](resources/application_state_machine.png)
+```mermaid
+stateDiagram-v2
+
+    [*] --> Submitted
+
+    Submitted --> DriverRequested
+    Submitted --> SchedulingFailure
+
+    ScheduledToRestart --> DriverRequested
+
+    DriverRequested --> DriverStarted
+    DriverRequested --> DriverStartTimedOut
+
+    DriverStarted --> DriverReady
+    DriverStarted --> DriverReadyTimedOut
+    DriverStarted --> DriverEvicted
+
+    DriverReady --> RunningHealthy
+    DriverReady --> InitializedBelowThresholdExecutors
+    DriverReady --> RunningWithPartialCapacity
+    DriverReady --> ExecutorsStartTimedOut
+    DriverReady --> DriverEvicted
+
+    InitializedBelowThresholdExecutors --> RunningHealthy
+    InitializedBelowThresholdExecutors --> RunningWithPartialCapacity
+    InitializedBelowThresholdExecutors --> Failed
+
+    RunningHealthy --> Succeeded
+    RunningHealthy --> RunningWithBelowThresholdExecutors
+    RunningHealthy --> RunningWithPartialCapacity
+    RunningHealthy --> Failed
+
+    RunningWithBelowThresholdExecutors --> RunningWithPartialCapacity
+    RunningWithBelowThresholdExecutors --> RunningHealthy
+    RunningWithBelowThresholdExecutors --> Failed
+
+    RunningWithPartialCapacity --> RunningWithBelowThresholdExecutors
+    RunningWithPartialCapacity --> RunningHealthy
+    RunningWithPartialCapacity --> Succeeded
+    RunningWithPartialCapacity --> Failed
+
+    state Failures {
+        SchedulingFailure
+        DriverStartTimedOut
+        DriverReadyTimedOut
+        ExecutorsStartTimedOut
+        DriverEvicted
+        Failed
+    }
+
+    Failures --> ScheduledToRestart : Retry Configured
+    Failures --> ResourceReleased : Terminated
+
+    Succeeded --> ResourceReleased
+    ResourceReleased --> [*]
+
+    %% Place TerminatedWithoutReleaseResources further to avoid overlap
+    Failures --> TerminatedWithoutReleaseResources : Retain Policy
+    Succeeded --> TerminatedWithoutReleaseResources
+    TerminatedWithoutReleaseResources --> [*]
+```
 
 * Spark applications are expected to run from submitted to succeeded before releasing resources
 * User may configure the app CR to time-out after given threshold of time if it cannot reach healthy
@@ -74,7 +134,22 @@ launching Spark deployments and submitting jobs under the hood. It also uses
 
 ## Cluster State Transition
 
-[![Cluster State Transition](resources/cluster_state_machine.png)](resources/cluster_state_machine.png)
+```mermaid
+stateDiagram-v2
+
+    [*] --> Submitted
+
+    Submitted --> RunningHealthy
+    Submitted --> SchedulingFailure
+
+    RunningHealthy --> Failed
+    RunningHealthy --> ResourceReleased
+
+    SchedulingFailure --> ResourceReleased
+    Failed --> ResourceReleased
+
+    ResourceReleased --> [*]
+```
 
 * Spark clusters are expected to be always running after submitted.
 * Similar to Spark applications, K8s resources created for a cluster would be deleted as the final
