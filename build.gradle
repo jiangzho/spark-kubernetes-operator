@@ -70,6 +70,10 @@ subprojects {
       name = "GCS Maven Central mirror"
       url = uri("https://maven-central.storage-download.googleapis.com/maven2/")
     }
+    maven {
+      name = "Staging"
+      url = uri("https://repository.apache.org/content/repositories/orgapachespark-1526/")
+    }
     mavenCentral()
   }
 
